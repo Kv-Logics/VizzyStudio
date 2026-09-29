@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
+from app.api.routes import stories, panels, chat
+
 app = FastAPI(
     title="Vizzy API",
     description="Backend API for Vizzy - AI Graphic Novel & Storyboard Creator",
@@ -16,6 +18,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(stories.router, prefix="/api/v1/stories", tags=["stories"])
+app.include_router(panels.router, prefix="/api/v1/stories", tags=["panels"])
+app.include_router(chat.router, prefix="/api/v1/chat", tags=["chat"])
 
 @app.get("/")
 async def root():
