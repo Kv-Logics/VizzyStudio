@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.env
+**/.env
+aws_deploy.sh
+remote_deploy.sh
+public_ip.txt
+*.pem
