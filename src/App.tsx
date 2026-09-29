@@ -151,7 +151,7 @@ export function App() {
   if (!metadata) return null;
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 overflow-hidden text-slate-100 font-sans selection:bg-amber-500 selection:text-slate-950">
+    <div className="flex flex-col h-screen overflow-hidden text-slate-900 font-sans">
       <Navbar
         metadata={metadata}
         panelCount={panels.length}

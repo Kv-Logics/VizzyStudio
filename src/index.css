@@ -12,8 +12,8 @@
 
   body {
     font-family: var(--font-sans);
-    background-color: #0b0f19;
-    color: #f3f4f6;
+    background: linear-gradient(135deg, #e3ebef 0%, #e3ebef 20%, #f7d4b4 80%, #fdbba7 100%);
+    color: #111827;
     overflow-x: hidden;
   }
 }
