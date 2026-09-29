@@ -3,6 +3,7 @@ import { Navbar } from './components/Navbar';
 import { VizzyChat } from './components/Chat/VizzyChat';
 import { PanelGrid } from './components/Storyboard/PanelGrid';
 import { PanelEditorModal } from './components/Storyboard/PanelEditorModal';
+import { CookieConsent } from './components/CookieConsent';
 import { LoopSlideshowModal } from './components/Slideshow/LoopSlideshowModal';
 import { StorySetupWizardModal } from './components/Wizard/StorySetupWizardModal';
 import { D_DAY_STORY, CYBERPUNK_STORY } from './data/presetStories';
@@ -21,6 +22,12 @@ export function App() {
   const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
+    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      window.location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+    }
+  }, []);
+
+  useEffect(() => {
     if (!metadata) {
       initDemoStory(D_DAY_STORY);
     }
@@ -28,13 +35,13 @@ export function App() {
 
   const handleSwitchPreset = (presetId: string) => {
     audioService.playSoundFx('page_turn');
-    if (presetId === 'd-day-normandy') {
+    if (presetId === '123e4567-e89b-12d3-a456-426614174000') {
       initDemoStory(D_DAY_STORY);
-    } else if (presetId === 'neo-tokyo-2099') {
+    } else if (presetId === '123e4567-e89b-12d3-a456-426614174001') {
       initDemoStory(CYBERPUNK_STORY);
     } else if (presetId === 'new-blank') {
       const newMeta: StoryMetadata = {
-        id: `story-${Date.now()}`,
+        id: crypto.randomUUID(),
         title: 'Untitled Visual Odyssey',
         genre: 'Sci-Fi / Adventure',
         visualStyle: 'Vibrant Anime',
@@ -80,9 +87,24 @@ export function App() {
 
     if (metadata) {
       try {
+        // Ensure story exists on AWS DB prior to sending chat message
+        try {
+          await storyApi.createStory({
+            id: metadata.id,
+            title: metadata.title,
+            genre: metadata.genre,
+            visual_style: metadata.visualStyle,
+            synopsis: metadata.synopsis,
+            character_notes: metadata.characterNotes,
+            author: metadata.author
+          });
+        } catch (_err) {
+          // Story may already exist
+        }
+
         const res = await chatApi.sendMessage(metadata.id, userText);
         addMessage({
-          id: res.data.id,
+          id: res.data.id || `msg-${Date.now()}`,
           sender: 'vizzy',
           text: res.data.content,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -210,6 +232,7 @@ export function App() {
           onToggleMute={() => setIsMuted(audioService.toggleMute())}
         />
       )}
+      <CookieConsent />
     </div>
   );
 }

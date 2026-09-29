@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     # Database
     POSTGRES_USER: str = "vizzy"
     POSTGRES_PASSWORD: str = "pass"
-    POSTGRES_SERVER: str = "localhost"
+    POSTGRES_SERVER: str = "postgres"
     POSTGRES_PORT: str = "5432"
     POSTGRES_DB: str = "vizzy"
     

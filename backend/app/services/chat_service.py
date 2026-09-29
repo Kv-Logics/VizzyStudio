@@ -1,4 +1,9 @@
-import google.generativeai as genai
+try:
+    import google.generativeai as genai
+    HAS_GENAI = True
+except ImportError:
+    HAS_GENAI = False
+
 import json
 from typing import Tuple, List, Dict, Any
 from app.config import settings
@@ -6,9 +11,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-if settings.GEMINI_API_KEY:
-    genai.configure(api_key=settings.GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+if HAS_GENAI and settings.GEMINI_API_KEY:
+    try:
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+    except Exception as e:
+        logger.error(f"Failed to configure Gemini model: {e}")
+        model = None
 else:
     model = None
 

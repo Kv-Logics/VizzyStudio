@@ -9,10 +9,25 @@ from app.models.chat_message import ChatMessage, SenderType
 from app.schemas.chat_message import ChatMessageCreate, ChatMessageResponse
 from app.services.chat_service import generate_vizzy_response
 
+from app.models.story import Story, User
+
 router = APIRouter()
 
 @router.post("/", response_model=ChatMessageResponse, status_code=status.HTTP_201_CREATED)
 async def send_message(message_in: ChatMessageCreate, db: AsyncSession = Depends(get_db)):
+    # Auto-ensure story exists in DB
+    story = await db.get(Story, message_in.story_id)
+    if not story:
+        user_id = UUID("00000000-0000-0000-0000-000000000000")
+        user = await db.get(User, user_id)
+        if not user:
+            user = User(id=user_id, email="guest@vizzy.app", name="Guest")
+            db.add(user)
+            await db.commit()
+        story = Story(id=message_in.story_id, user_id=user_id, title="Visual Story")
+        db.add(story)
+        await db.commit()
+
     # Save user message
     user_msg = ChatMessage(**message_in.model_dump())
     db.add(user_msg)

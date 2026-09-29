@@ -35,7 +35,10 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      - DATABASE_URL=postgresql://vizzy:pass@postgres:5432/vizzy
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_USER=vizzy
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=vizzy
       - REDIS_URL=redis://redis:6379/0
     depends_on:
       postgres:
@@ -50,7 +53,10 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      - DATABASE_URL=postgresql://vizzy:pass@postgres:5432/vizzy
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_USER=vizzy
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=vizzy
       - REDIS_URL=redis://redis:6379/0
     depends_on:
       postgres:

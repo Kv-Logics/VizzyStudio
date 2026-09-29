@@ -80,8 +80,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               value={metadata.id}
               className="bg-transparent hover:text-slate-900 focus:outline-none cursor-pointer transition-colors"
             >
-              <option value="d-day-normandy">Preset: D-Day</option>
-              <option value="neo-tokyo-2099">Preset: Neo-Tokyo</option>
+              <option value="123e4567-e89b-12d3-a456-426614174000">Preset: D-Day</option>
+              <option value="123e4567-e89b-12d3-a456-426614174001">Preset: Neo-Tokyo</option>
               <option value="new-blank">Preset: Custom</option>
             </select>
             

@@ -21,6 +21,10 @@ async def get_current_user_id(x_user_id: UUID = Header(default=UUID("00000000-00
 
 @router.post("/", response_model=StoryResponse, status_code=status.HTTP_201_CREATED)
 async def create_story(story_in: StoryCreate, user_id: UUID = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
+    if story_in.id:
+        existing = await db.get(Story, story_in.id)
+        if existing:
+            return existing
     new_story = Story(**story_in.model_dump(), user_id=user_id)
     db.add(new_story)
     await db.commit()

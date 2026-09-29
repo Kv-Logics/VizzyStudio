@@ -40,4 +40,4 @@ class Story(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user = relationship("User", back_populates="stories")
-    panels = relationship("Panel", back_populates="story", cascade="all, delete-orphan", order_by="Panel.sort_order")
+    panels = relationship("Panel", back_populates="story", cascade="all, delete-orphan")

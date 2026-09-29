@@ -13,7 +13,7 @@ export interface PresetStory {
 
 export const D_DAY_STORY: PresetStory = {
   metadata: {
-    id: 'd-day-normandy',
+    id: '123e4567-e89b-12d3-a456-426614174000',
     title: 'D-Day: Dawn at Omaha Beach',
     genre: 'Historical War Drama',
     visualStyle: 'WW2 Sepia Ink',
@@ -209,7 +209,7 @@ export const D_DAY_STORY: PresetStory = {
 
 export const CYBERPUNK_STORY: PresetStory = {
   metadata: {
-    id: 'neo-tokyo-2099',
+    id: '123e4567-e89b-12d3-a456-426614174001',
     title: 'Neo-Tokyo 2099: Cyber Heist',
     genre: 'Sci-Fi Cyberpunk',
     visualStyle: 'Cyberpunk Neon',

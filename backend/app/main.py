@@ -3,12 +3,25 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from app.api.routes import stories, panels, chat
+from app.models.database import Base, engine
+import app.models.story
+import app.models.panel
+import app.models.chat_message
+import redis
+import google.generativeai as genai
+import os
+import requests
 
 app = FastAPI(
     title="Vizzy API",
     description="Backend API for Vizzy - AI Graphic Novel & Storyboard Creator",
     version="1.0.0",
 )
+
+@app.on_event("startup")
+async def startup_event():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 # Configure CORS for local development
 app.add_middleware(
@@ -29,7 +42,48 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    status = {"status": "healthy", "components": {}}
+    
+    # Check DB
+    try:
+        async with engine.connect() as conn:
+            status["components"]["database"] = "ok"
+    except Exception as e:
+        status["status"] = "unhealthy"
+        status["components"]["database"] = f"error: {str(e)}"
+        
+    # Check Redis
+    try:
+        r = redis.from_url(os.getenv("REDIS_URL", "redis://redis:6379/0"))
+        r.ping()
+        status["components"]["redis"] = "ok"
+    except Exception as e:
+        status["status"] = "unhealthy"
+        status["components"]["redis"] = f"error: {str(e)}"
+        
+    # Check Gemini API
+    try:
+        if os.getenv("GEMINI_API_KEY"):
+            status["components"]["gemini"] = "configured"
+        else:
+            status["status"] = "unhealthy"
+            status["components"]["gemini"] = "missing key"
+    except Exception as e:
+        status["status"] = "unhealthy"
+        status["components"]["gemini"] = f"error: {str(e)}"
+        
+    # Check NVIDIA API
+    try:
+        if os.getenv("NVIDIA_API_KEY"):
+            status["components"]["nvidia"] = "configured"
+        else:
+            status["status"] = "unhealthy"
+            status["components"]["nvidia"] = "missing key"
+    except Exception as e:
+        status["status"] = "unhealthy"
+        status["components"]["nvidia"] = f"error: {str(e)}"
+        
+    return status
 
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

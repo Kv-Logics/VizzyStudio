@@ -39,6 +39,16 @@ export const VizzyChat: React.FC<VizzyChatProps> = ({
   const [activeCamera, setActiveCamera] = useState<CameraAngle>('Cinematic Wide');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  const renderFormattedText = (text: string) => {
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i} className="font-bold">{part.slice(2, -2)}</strong>;
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, generatedOptions]);
@@ -165,7 +175,7 @@ export const VizzyChat: React.FC<VizzyChatProps> = ({
                 </div>
                 
                 <div className="space-y-2 whitespace-pre-wrap font-sans">
-                  {msg.text}
+                  {renderFormattedText(msg.text)}
                 </div>
 
                 {/* Interactive Quick Replies in chat */}
