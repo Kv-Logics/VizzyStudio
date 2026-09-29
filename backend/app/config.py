@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     REPLICATE_API_TOKEN: str = ""
     GEMINI_API_KEY: str = ""
+    NVIDIA_API_KEY: str = ""
     
     # AWS / S3 Storage
     AWS_ACCESS_KEY_ID: str = ""
