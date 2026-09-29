@@ -10,6 +10,8 @@ interface StoryState {
   
   // Actions
   setMetadata: (meta: StoryMetadata) => void;
+  setPanels: (panels: StoryPanel[]) => void;
+  setMessages: (messages: ChatMessage[]) => void;
   addPanel: (panel: StoryPanel) => void;
   updatePanel: (panelId: string, updates: Partial<StoryPanel>) => void;
   addMessage: (message: ChatMessage) => void;
@@ -26,6 +28,8 @@ export const useStoryStore = create<StoryState>((set) => ({
   isLoading: false,
   
   setMetadata: (meta) => set({ metadata: meta }),
+  setPanels: (panels) => set({ panels }),
+  setMessages: (messages) => set({ messages }),
   addPanel: (panel) => set((state) => ({ panels: [...state.panels, panel] })),
   updatePanel: (panelId, updates) => set((state) => ({
     panels: state.panels.map(p => p.id === panelId ? { ...p, ...updates } : p)

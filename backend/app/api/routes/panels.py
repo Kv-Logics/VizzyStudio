@@ -9,8 +9,14 @@ from app.models.story import Story
 from app.models.panel import Panel, PanelOption, PanelStatus
 from app.schemas.panel import PanelCreate, PanelResponse, PanelOptionResponse
 from app.worker.tasks import generate_panel_options_task
+from app.worker.celery_app import celery_app
 
 router = APIRouter()
+
+@router.get("/task/{task_id}")
+async def get_task_status(task_id: str):
+    task = celery_app.AsyncResult(task_id)
+    return {"status": task.status, "result": task.result}
 
 @router.post("/{story_id}/panels/generate", status_code=status.HTTP_202_ACCEPTED)
 async def generate_panel(story_id: UUID, prompt: str, db: AsyncSession = Depends(get_db)):

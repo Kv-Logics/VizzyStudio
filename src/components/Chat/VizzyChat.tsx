@@ -16,6 +16,7 @@ import {
 import { ChatMessage, PanelOption, VisualStyle, CameraAngle, StoryMetadata } from '../../types';
 import { generatePanelOptions } from '../../services/imageGeneratorService';
 import { audioService } from '../../services/audioService';
+import { panelApi } from '../../services/apiClient';
 
 interface VizzyChatProps {
   metadata: StoryMetadata;
@@ -54,16 +55,57 @@ export const VizzyChat: React.FC<VizzyChatProps> = ({
     setInputText('');
   };
 
-  const handleGenerateOptions = (promptText: string, camera: CameraAngle) => {
+  const handleGenerateOptions = async (promptText: string, camera: CameraAngle) => {
     setIsGeneratingOptions(true);
     audioService.playSoundFx('synth_drone');
+    
+    if (metadata?.id && !metadata.id.startsWith('story-')) {
+      try {
+        const res = await panelApi.generatePanel(metadata.id, promptText);
+        const taskId = res.data.task_id;
+        const panelId = res.data.panel_id;
+
+        const poll = setInterval(async () => {
+          try {
+            const statusRes = await panelApi.checkTaskStatus(taskId);
+            if (statusRes.data.status === 'SUCCESS') {
+              clearInterval(poll);
+              // Fetch options
+              const opts = await panelApi.getOptions(metadata.id, panelId);
+              if (opts.data && opts.data.length > 0) {
+                // Map backend options to frontend interface
+                const mappedOptions = opts.data.map((o: any) => ({
+                  id: o.id,
+                  prompt: o.prompt,
+                  description: o.prompt,
+                  imageUrl: o.image_url,
+                  cameraAngle: o.camera_angle,
+                  lightingTone: 'Dramatic',
+                  seed: o.seed
+                }));
+                setGeneratedOptions(mappedOptions);
+                setSelectedOptionId(mappedOptions[0].id);
+                setIsGeneratingOptions(false);
+              }
+            } else if (statusRes.data.status === 'FAILURE') {
+                clearInterval(poll);
+                setIsGeneratingOptions(false);
+                alert("Task failed");
+            }
+          } catch(e) {}
+        }, 2000);
+        return;
+      } catch (e) {
+        console.warn('Backend unavailable, falling back to local mock generation.');
+      }
+    }
     
     setTimeout(() => {
       const options = generatePanelOptions(promptText, metadata.visualStyle, camera);
       setGeneratedOptions(options);
       setSelectedOptionId(options[0].id);
       setIsGeneratingOptions(false);
-    }, 600);
+    }, 1500);
   };
 
   const handleApproveSelectedOption = () => {
