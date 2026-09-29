@@ -13,3 +13,4 @@ passlib[bcrypt]
 structlog
 python-dotenv
 aioboto3
+requests
