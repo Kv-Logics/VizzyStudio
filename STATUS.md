@@ -3,7 +3,7 @@
 **Current Status:**  
 The core MVP is fully built and deployed. The collaborative chat-to-canvas workflow is fully operational. A user can start a story, chat with the AI Director (Vizzy) to flesh out details, generate panel options, select their favorite, and view the final sequence in an auto-running slideshow.
 
-## What We Built (Features & Architecture)
+## What I Built (Features & Architecture)
 *   **Creative Setup Wizard:** Added an onboarding flow where users define their aesthetic (e.g., WW2 Sepia, Cyberpunk), genre, and high-level synopsis to establish the "Creative Bible" before chatting.
 *   **Stateful AI Chat Interface (Vizzy):** Built a custom React chat UI. The backend uses `gemini-3.8-flash` with a strict system prompt to guide the user step-by-step (Action → Character → Setting → Camera). It dynamically generates "Quick Reply" buttons for a seamless UX.
 *   **Asynchronous Image Generation:** When the prompt is finalized, the backend spins up a **Celery Background Worker** using Redis. It generates 3 cinematic variations of the panel in the background so the UI never blocks. 
