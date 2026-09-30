@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Navbar } from './components/Navbar';
 import { VizzyChat } from './components/Chat/VizzyChat';
 import { PanelGrid } from './components/Storyboard/PanelGrid';
@@ -24,6 +24,37 @@ export function App() {
   const [isMuted, setIsMuted] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [typingStatus, setTypingStatus] = useState('Vizzy is typing...');
+  
+  const [chatWidth, setChatWidth] = useState(420);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const isDraggingRef = useRef(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const startDrag = (e: React.MouseEvent) => {
+    isDraggingRef.current = true;
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', endDrag);
+    document.body.style.userSelect = 'none';
+  };
+
+  const onDrag = (e: MouseEvent) => {
+    if (!isDraggingRef.current) return;
+    // Limit width between 300px and 50vw
+    const newWidth = Math.min(Math.max(e.clientX, 300), window.innerWidth * 0.7);
+    setChatWidth(newWidth);
+  };
+
+  const endDrag = () => {
+    isDraggingRef.current = false;
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('mouseup', endDrag);
+    document.body.style.userSelect = '';
+  };
 
   useEffect(() => {
     if (!metadata) {
@@ -246,7 +277,10 @@ export function App() {
         onToggleMute={() => setIsMuted(audioService.toggleMute())}
       />
       <div className="flex-1 flex overflow-hidden">
-        <div className="w-full md:w-[380px] lg:w-[420px] flex-shrink-0 h-full">
+        <div 
+          className="flex-shrink-0 h-full relative bg-white" 
+          style={{ width: isMobile ? '100%' : `${chatWidth}px` }}
+        >
           <VizzyChat
             metadata={metadata}
             messages={messages}
@@ -258,8 +292,14 @@ export function App() {
             typingStatus={typingStatus}
             onClearChat={() => handleSwitchPreset('new-blank')}
           />
+          {!isMobile && (
+            <div 
+              onMouseDown={startDrag}
+              className="absolute top-0 right-0 w-2 h-full cursor-col-resize hover:bg-[#e0fb73] active:bg-[#c4df55] transition-colors z-50 transform translate-x-1/2"
+            />
+          )}
         </div>
-        <div className="hidden md:flex flex-1 h-full">
+        <div className="hidden md:flex flex-1 h-full bg-slate-50">
           <PanelGrid
             panels={panels}
             metadata={metadata}
