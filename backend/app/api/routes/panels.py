@@ -7,7 +7,7 @@ from uuid import UUID
 from app.models.database import get_db
 from app.models.story import Story
 from app.models.panel import Panel, PanelOption, PanelStatus
-from app.schemas.panel import PanelCreate, PanelResponse, PanelOptionResponse
+from app.schemas.panel import PanelBase, PanelCreate, PanelResponse, PanelOptionResponse
 from app.worker.tasks import generate_panel_options_task
 from app.worker.celery_app import celery_app
 
