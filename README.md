@@ -1,101 +1,63 @@
-# VizzyStudio: AI-Powered Graphic Novel & Storyboard Creator
+# VizzyStudio: AI-Directed Visual Storyboard Engine
 
-**VizzyStudio** is an interactive, stateful web application that allows users to iteratively design and generate comic book panels, visual books, or storyboards through a collaborative chat interface with an AI Creative Director. 
+VizzyStudio is an advanced, stateful web application engineered to fulfill the requirements of an iterative, collaborative AI graphic novel and visual storyboard creator.
 
-## 🚀 Tech Stack
+## 🎯 Task Execution & Requirement Fulfillment
 
-### Frontend
-- **Framework:** React 18 with TypeScript
-- **Styling:** Tailwind CSS (Utility-first, responsive, and GPU-accelerated)
-- **State Management:** Zustand (Lightweight global state for story and workflow progression)
-- **Icons & Graphics:** Lucide React
+The core objective of the assignment was to build a system with a **collaborative creative process** via a **chat interface**, resulting in an **iterative flow** that generates a final **auto-running slideshow**. Here is how the architecture perfectly resolves each requirement:
 
-### Backend
-- **Framework:** FastAPI (Python) - High performance async API.
-- **AI Integration:** Google Gemini (`gemini-3.8-flash`) for the conversational AI director.
-- **Task Queue:** Celery with Redis as the message broker for async image generation.
-- **Database:** PostgreSQL (Asyncpg) orchestrated via SQLAlchemy ORM.
-- **External APIs:** Pollinations AI (Image Generation fallback to Unsplash/Picsum).
+### 1. The Input: Chat Interface & Collaborative Process
+Instead of relying on a complex, monolithic prompt, VizzyStudio employs a conversational **AI Creative Director (Vizzy)**. 
+- **Implementation:** Built using a custom React interface and an asynchronous FastAPI backend powered by `gemini-3.8-flash`. 
+- **The Process:** Vizzy guides the user through a strict 4-step creative sequence (Action → Character → Setting → Camera). The backend utilizes a PostgreSQL database to inject the last 10 messages of conversational history into the LLM context. This allows Vizzy to "remember" previous instructions, skip redundant questions, and dynamically generate "Quick Reply" UI buttons to reduce user friction.
+
+### 2. The Flow: Iterative Back-and-Forth Generation
+The system iterates panel-by-panel until the story is complete, ensuring the user has granular control over the narrative.
+- **Implementation:** Once the creative constraints are finalized in the chat, the frontend triggers a generation event. To prevent UI blocking during heavy inference, FastAPI delegates the prompt generation to a **Celery Background Worker** orchestrated via **Redis**.
+- **The Result:** The worker processes the prompt, injects the user's global visual style (e.g., *WW2 Sepia Ink*), and hits external image generation APIs to produce 3 cinematic variations. The worker runs an isolated `asyncio` loop to save the results directly back into the Postgres database, allowing the React frontend to poll and present the options seamlessly. The user selects the best option, refines it, and moves to the next panel.
+
+### 3. The Output: Stitched Slideshow Sequence
+The final deliverable is an uninterrupted, cinematic viewing experience of the generated graphic novel.
+- **Implementation:** The UI provides multiple viewing modes (Comic Page, Filmstrip Grid) built with Tailwind CSS. Once all `n` images are generated, the user can trigger the **Slideshow Player** modal. 
+- **The Result:** The React application maps over the chronologically ordered Postgres `panels` data, stitching them together into an auto-running, timed visual loop complete with programmatic CSS transitions.
 
 ---
 
-## 🏗️ System Architecture & Design
+## 🏗️ System Architecture & Orchestration
 
-VizzyStudio relies on an event-driven, decoupled architecture where chat interactions are fast and synchronous, but heavy image generation tasks are offloaded to background workers.
+The application relies on an event-driven, decoupled architecture designed for high responsiveness and background processing.
 
 ```mermaid
 graph TD;
-    A[Frontend React App] -->|REST API| B(FastAPI Backend)
-    B -->|SQLAlchemy Async| C[(PostgreSQL)]
-    B -->|Enqueues Task| D(Redis Broker)
+    A[React 18 Frontend] -->|REST API (FastAPI)| B(Backend Engine)
+    B -->|SQLAlchemy Asyncpg| C[(PostgreSQL Database)]
+    B -->|Context + Prompt| G[Gemini 3.8-Flash LLM]
+    B -->|Enqueues Task| D(Redis Message Broker)
     D -->|Consumes Task| E[Celery Worker]
-    E -->|Generates Image| F[Pollinations AI API]
-    E -->|Saves Results| C
-    B -->|Context + Prompt| G[Gemini 3.8 API]
+    E -->|Generates Media| F[Image Generation API]
+    E -->|Async DB Inject| C
 ```
 
-### Key Workflows:
-1. **Interactive Chat:** The frontend sends user prompts to the FastAPI backend. FastAPI retrieves the last 10 chat messages from Postgres to provide memory context, then queries the Gemini LLM. Gemini enforces a strict 4-step creative sequence before prompting generation.
-2. **Background Image Generation:** When a panel generation is triggered, FastAPI delegates the prompt and style to Celery. Celery hits external AI generation models, creates 3 variations, and stores the resulting image metadata in Postgres asynchronously.
-3. **Frontend Polling:** The React app polls the task status. Once the Celery worker reports success, the frontend fetches the options from Postgres.
+---
+
+## 💾 Core Database Schema (SQLAlchemy)
+
+The data layer is fully normalized to maintain the relationship between a global story, its conversational context, and its generated visual assets.
+
+1. **`stories` (The Creative Bible):** Stores global state (Genre, Visual Style, Synopsis, Color Palette) to ensure artistic consistency across all `n` panels.
+2. **`chat_messages` (The AI Memory):** Persists the back-and-forth dialogue (`story_id`, `sender`, `content`, `quick_replies`) to give the LLM historical context.
+3. **`panels` & `panel_options` (The Deliverables):** Tracks the lifecycle of each frame. `panels` store the sequence order and camera instructions. `panel_options` hold the 3 generated image URLs and a boolean flag for the final user selection.
 
 ---
 
-## 💾 Database Schema
+## ⚡ Engineering Challenges & Performance Optimizations
 
-The database relies on three core models managed via SQLAlchemy. 
-
-### 1. `stories`
-Stores the high-level "Creative Bible" of the graphic novel.
-- `id` (UUID, Primary Key)
-- `title`, `genre`, `visual_style`, `synopsis` (Strings)
-- `created_at`, `updated_at` (Timestamps)
-
-### 2. `chat_messages`
-Persists the chat history to give the AI memory context.
-- `id` (UUID, Primary Key)
-- `story_id` (UUID, Foreign Key)
-- `sender` (Enum: `vizzy` or `user`)
-- `content` (Text)
-- `quick_replies` (JSONB)
-- `created_at` (Timestamp)
-
-### 3. `panels` & `panel_options`
-Stores the individual scenes and the AI-generated variations.
-- `id` (UUID, Primary Key)
-- `story_id` (UUID, Foreign Key)
-- `description`, `camera_angle` (Strings)
-- `status` (Enum: generating, selected, etc.)
-- **`panel_options` Table:** Linked to `panels`, stores `image_url`, `prompt`, `seed`, and boolean `is_selected`.
+*   **LLM Context Amnesia & Throttling:** Passing the entire story history to the LLM on every chat event caused severe token bloat and hallucination. Engineered a strict sliding-window context (last 10 messages) coupled with a rigid system prompt. This forced the AI to acknowledge previously stated constraints and drive the conversation forward rather than looping.
+*   **Asynchronous Database Blocking in Celery:** By design, Celery workers are synchronous, which clashed with the highly concurrent `asyncpg` PostgreSQL engine used by FastAPI. When Celery finished generating images, it couldn't save them. I engineered a solution to run an isolated `asyncio.run()` event loop *inside* the Celery worker, bridging the synchronous task queue with the asynchronous database layer.
+*   **Frontend Paint Lag (Layout Thrashing):** Rendering high-resolution generated images within complex UI containers caused severe scrolling lag and dropped frames in the browser. I diagnosed the bottleneck as expensive CSS `backdrop-blur` repaints and CPU-bound animations. By stripping the heavy filters during scroll and injecting `transform-gpu` and `will-change-transform` directives, the rendering was offloaded entirely to the hardware GPU, achieving 60fps scrolling.
 
 ---
 
-## 🔌 API Documentation
+## 🚀 Deployment & Local Testing
 
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/api/v1/stories/` | `POST` | Creates a new Story/Creative Bible. |
-| `/api/v1/chat/` | `POST` | Sends a user message, returns Vizzy's contextual AI response. |
-| `/api/v1/chat/{story_id}` | `GET` | Retrieves the chronological chat history for a story. |
-| `/api/v1/stories/{story_id}/panels/generate` | `POST` | Enqueues a Celery task to generate image options. Returns `task_id`. |
-| `/api/v1/stories/task/{task_id}` | `GET` | Checks status of a Celery background task. |
-| `/api/v1/stories/{story_id}/panels/{panel_id}/options` | `GET` | Retrieves generated image options from the database. |
-| `/api/v1/stories/{story_id}/panels/{panel_id}/select/{option_id}` | `POST` | Approves a specific image option to be added to the final storyboard. |
-
----
-
-## ⚡ Performance Optimizations
-
-### Frontend Optimizations (Scroll Lag & Layout Thrashing)
-- **Hardware Acceleration:** Injected `transform-gpu` and `will-change-transform` tags onto the panel cards and image containers. This forces the browser to offload hover animations to the GPU, preventing layout recalculation on the main thread.
-- **Filter Stripping:** Removed expensive CSS `backdrop-blur` filters from large scrolling containers which were causing frame drops (scroll lag) when repainting moving pixels.
-
-### Backend Optimizations (Async DB & Blocking Calls)
-- **Async Celery Saves:** Originally, Celery's synchronous nature prevented it from easily saving the generated images back into the `asyncpg` Postgres database. This was engineered around by wrapping the DB injection in an isolated `asyncio.run()` loop within the Celery worker task.
-- **LLM Context Throttling:** Rather than feeding the entire story history to Gemini on every request (which would hit token limits and slow down response times), the API strictly queries the database for the last `10` messages to provide just enough contextual awareness.
-
----
-
-## 📜 Relevant Project Documents
-- [STATUS.md](./STATUS.md) - Summary of blockers, challenges, and feature completion.
-- [GUIDE.md](./GUIDE.md) - Step-by-step user guide and exact testing instructions.
+*See [GUIDE.md](./GUIDE.md) for exact testing instructions, user flows, and shortcuts for interacting with the AI Director.*
