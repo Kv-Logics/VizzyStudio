@@ -22,6 +22,8 @@ interface VizzyChatProps {
   onSelectOptionForNewPanel: (option: PanelOption, caption?: string, speech?: string) => void;
   onUpdateStyle: (style: VisualStyle) => void;
   panelCount: number;
+  isTyping?: boolean;
+  typingStatus?: string;
 }
 
 export const VizzyChat: React.FC<VizzyChatProps> = ({
@@ -30,7 +32,9 @@ export const VizzyChat: React.FC<VizzyChatProps> = ({
   onSendMessage,
   onSelectOptionForNewPanel,
   onUpdateStyle,
-  panelCount
+  panelCount,
+  isTyping,
+  typingStatus
 }) => {
   const { creativeBible, activeTarget, workflowState, lockCreativeBible } = useStoryStore();
   const [inputText, setInputText] = useState('');
@@ -241,12 +245,22 @@ export const VizzyChat: React.FC<VizzyChatProps> = ({
           );
         })}
 
+        {/* Chatbot typing indicator with status text */}
+        {isTyping && !isGeneratingOptions && (
+          <div className="flex space-x-3 items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm animate-pulse">
+            <Bot className="w-5 h-5 text-slate-400 animate-bounce" />
+            <span className="text-xs text-slate-600 font-medium">
+              {typingStatus || 'Vizzy is typing...'}
+            </span>
+          </div>
+        )}
+
         {/* Live Panel Options Generation Card inside Chat */}
         {isGeneratingOptions && (
           <div className="flex space-x-3 items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm animate-pulse">
             <Bot className="w-5 h-5 text-slate-400 animate-spin" />
             <span className="text-xs text-slate-600 font-medium">
-              Rendering camera angle variations...
+              🖌️ Generating stunning camera angle variations...
             </span>
           </div>
         )}

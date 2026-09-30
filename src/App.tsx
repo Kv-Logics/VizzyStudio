@@ -22,6 +22,8 @@ export function App() {
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isBibleOpen, setIsBibleOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingStatus, setTypingStatus] = useState('Vizzy is typing...');
 
   useEffect(() => {
     if (!metadata) {
@@ -130,7 +132,11 @@ export function App() {
           // Story may already exist
         }
 
+        setIsTyping(true);
+        setTypingStatus('✨ Thinking of the perfect response...');
+
         const res = await chatApi.sendMessage(metadata.id, userText);
+        
         addMessage({
           id: res.data.id || `msg-${Date.now()}`,
           sender: 'vizzy',
@@ -146,6 +152,8 @@ export function App() {
           timestamp: 'Just now',
           quickReplies: ['Generate Panel Options']
         });
+      } finally {
+        setIsTyping(false);
       }
     }
   };
@@ -246,6 +254,8 @@ export function App() {
             onSelectOptionForNewPanel={handleSelectOptionForNewPanel}
             onUpdateStyle={handleUpdateStyle}
             panelCount={panels.length}
+            isTyping={isTyping}
+            typingStatus={typingStatus}
           />
         </div>
         <div className="hidden md:flex flex-1 h-full">
