@@ -7,8 +7,26 @@ from app.worker.celery_app import celery_app
 from app.config import settings
 from app.services.s3_service import s3_service
 import logging
+from app.models.database import AsyncSessionLocal
+from app.models.panel import PanelOption
 
 logger = logging.getLogger(__name__)
+
+async def save_options_to_db(options: list):
+    async with AsyncSessionLocal() as session:
+        for opt in options:
+            new_opt = PanelOption(
+                id=opt["id"],
+                panel_id=opt["panel_id"],
+                image_url=opt["image_url"],
+                seed=opt["seed"],
+                prompt=opt["prompt"],
+                camera_angle=opt["camera_angle"],
+                lighting_tone=opt["lighting_tone"],
+                is_selected=opt["is_selected"]
+            )
+            session.add(new_opt)
+        await session.commit()
 
 async def upload_bytes_to_s3(image_bytes: bytes, object_name: str) -> str:
     url = await s3_service.upload_file_bytes(image_bytes, object_name)
@@ -67,6 +85,12 @@ def generate_panel_options_task(self, panel_id: str, prompt: str, visual_style: 
             "lighting_tone": "Dramatic",
             "is_selected": False
         })
+
+    # Save options to database so they can be retrieved by GET /options
+    try:
+        asyncio.run(save_options_to_db(options))
+    except Exception as e:
+        logger.error(f"Failed to save options to DB: {e}")
 
     self.update_state(state="PROCESSING", meta={"progress": 100})
     return {"status": "success", "options": options, "panel_id": panel_id}
