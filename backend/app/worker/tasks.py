@@ -37,22 +37,19 @@ def generate_panel_options_task(self, panel_id: str, prompt: str, visual_style: 
         try:
             encoded_prompt = urllib.parse.quote(full_prompt)
             pollination_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=576&seed={seed_val}&nologo=true"
-            
-            # Fetch image bytes to verify and optionally upload to S3
-            img_res = requests.get(pollination_url, timeout=15)
-            if img_res.status_code == 200:
-                # If S3 is configured, save to S3
-                if settings.S3_BUCKET_NAME:
-                    try:
+            image_url = pollination_url
+
+            # Optionally upload to S3 if configured
+            if settings.S3_BUCKET_NAME:
+                try:
+                    img_res = requests.get(pollination_url, timeout=8)
+                    if img_res.status_code == 200:
                         filename = f"panels/{panel_id}/option_{i}_{seed_val}.jpg"
                         s3_url = asyncio.run(upload_bytes_to_s3(img_res.content, filename))
                         if s3_url:
                             image_url = s3_url
-                    except Exception as s3_err:
-                        logger.warning(f"S3 upload failed for option {i}: {s3_err}")
-                
-                if not image_url:
-                    image_url = pollination_url
+                except Exception as s3_err:
+                    logger.warning(f"S3 upload skipped/failed for option {i}: {s3_err}")
         except Exception as p_err:
             logger.warning(f"Pollinations AI failed for option {i}: {p_err}")
 

@@ -68,7 +68,7 @@ export const VizzyChat: React.FC<VizzyChatProps> = ({
       onSendMessage(text);
       // Auto-trigger panel generation after a short delay
       setTimeout(() => {
-        handleGenerateOptions(`Panel ${panelCount + 1} scene`, activeCamera);
+        handleGenerateOptions(text, activeCamera);
       }, 400);
       return;
     }
