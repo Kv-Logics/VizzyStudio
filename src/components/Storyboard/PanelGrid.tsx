@@ -111,7 +111,7 @@ export const PanelGrid: React.FC<PanelGridProps> = ({
         ) : (
           <div className={
             viewMode === 'comic_page'
-              ? 'grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto bg-white/30 p-8 rounded-[2rem] border border-white/50 shadow-sm backdrop-blur-md'
+              ? 'grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto bg-white/50 p-8 rounded-[2rem] border border-white/50 shadow-sm'
               : viewMode === 'grid'
               ? 'grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto'
               : 'flex space-x-8 overflow-x-auto pb-6 items-center px-4'
@@ -119,7 +119,7 @@ export const PanelGrid: React.FC<PanelGridProps> = ({
             {panels.map((panel, index) => (
               <div
                 key={panel.id}
-                className={`group relative bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
+                className={`group relative bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm transition-all duration-300 transform-gpu will-change-transform hover:shadow-xl hover:-translate-y-1 ${
                   viewMode === 'filmstrip' ? 'min-w-[380px] max-w-[400px] flex-shrink-0' : 'w-full'
                 }`}
               >
@@ -175,7 +175,7 @@ export const PanelGrid: React.FC<PanelGridProps> = ({
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${panel.id}/1024/576`;
                     }}
-                    className={`w-full h-full object-cover transition duration-500 group-hover:scale-105 ${
+                    className={`w-full h-full object-cover transition duration-500 transform-gpu will-change-transform group-hover:scale-105 ${
                       panel.filterEffect === 'sepia' 
                         ? 'sepia brightness-90' 
                         : panel.filterEffect === 'grayscale' 
@@ -189,7 +189,7 @@ export const PanelGrid: React.FC<PanelGridProps> = ({
                   />
 
                   {/* Camera Angle Tag */}
-                  <div className="absolute top-3 left-3 bg-white/90 backdrop-blur text-[10px] px-2.5 py-1 rounded-md text-slate-900 font-bold shadow-sm">
+                  <div className="absolute top-3 left-3 bg-white/95 text-[10px] px-2.5 py-1 rounded-md text-slate-900 font-bold shadow-sm">
                     {panel.cameraAngle}
                   </div>
 
