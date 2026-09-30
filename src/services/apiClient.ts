@@ -38,7 +38,12 @@ export const panelApi = {
     api.get(`/stories/task/${taskId}`),
   getPanels: (storyId: string) =>
     api.get(`/stories/${storyId}/panels`),
+  createPanel: (storyId: string, panelData: any) =>
+    api.post(`/stories/${storyId}/panels`, panelData),
+  updatePanel: (storyId: string, panelId: string, panelData: any) =>
+    api.put(`/stories/${storyId}/panels/${panelId}`, panelData),
 };
+
 
 
 export const chatApi = {

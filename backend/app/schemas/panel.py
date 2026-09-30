@@ -13,10 +13,11 @@ class PanelBase(BaseModel):
     camera_angle: Optional[str] = None
     filter_effect: Optional[str] = None
     sound_cue: Optional[str] = None
+    image_url: Optional[str] = None
     text_elements: Optional[List[Dict[str, Any]]] = []
 
 class PanelCreate(PanelBase):
-    pass
+    id: Optional[UUID] = None
 
 class PanelUpdate(PanelBase):
     pass

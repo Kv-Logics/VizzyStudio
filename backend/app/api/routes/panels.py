@@ -73,3 +73,56 @@ async def get_story_panels(story_id: UUID, db: AsyncSession = Depends(get_db)):
     )
     return result.scalars().all()
 
+@router.post("/{story_id}/panels", response_model=PanelResponse, status_code=status.HTTP_201_CREATED)
+async def create_or_upsert_panel(story_id: UUID, panel_in: PanelCreate, db: AsyncSession = Depends(get_db)):
+    story = await db.get(Story, story_id)
+    if not story:
+        # Create story if it doesn't exist yet
+        story = Story(
+            id=story_id,
+            title="Visual Odyssey",
+            genre="General",
+            visual_style="Cinematic Graphic Novel",
+            user_id=UUID("00000000-0000-0000-0000-000000000000")
+        )
+        db.add(story)
+        await db.commit()
+
+    if panel_in.id:
+        existing = await db.get(Panel, panel_in.id)
+        if existing:
+            for field, val in panel_in.model_dump(exclude_unset=True).items():
+                if field != "id":
+                    setattr(existing, field, val)
+            await db.commit()
+            await db.refresh(existing)
+            return existing
+
+    panel_data = panel_in.model_dump()
+    if not panel_data.get("id"):
+        panel_data.pop("id", None)
+    
+    new_panel = Panel(
+        **panel_data,
+        story_id=story_id,
+        status=PanelStatus.selected
+    )
+    db.add(new_panel)
+    await db.commit()
+    await db.refresh(new_panel)
+    return new_panel
+
+@router.put("/{story_id}/panels/{panel_id}", response_model=PanelResponse)
+async def update_panel(story_id: UUID, panel_id: UUID, panel_in: PanelBase, db: AsyncSession = Depends(get_db)):
+    panel = await db.get(Panel, panel_id)
+    if not panel or panel.story_id != story_id:
+        raise HTTPException(status_code=404, detail="Panel not found")
+        
+    for field, val in panel_in.model_dump(exclude_unset=True).items():
+        setattr(panel, field, val)
+        
+    await db.commit()
+    await db.refresh(panel)
+    return panel
+
+

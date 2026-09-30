@@ -12,7 +12,7 @@ import { generatePanelOptions } from './services/imageGeneratorService';
 import { exportStoryToPDF } from './services/pdfExportService';
 import { audioService } from './services/audioService';
 import { useStoryStore } from './stores/storyStore';
-import { chatApi, storyApi } from './services/apiClient';
+import { chatApi, storyApi, panelApi } from './services/apiClient';
 
 export function App() {
   const { metadata, panels, messages, setMetadata, setPanels, setMessages, addPanel, addMessage, updatePanel, initDemoStory } = useStoryStore();
@@ -24,8 +24,40 @@ export function App() {
   useEffect(() => {
     if (!metadata) {
       initDemoStory(D_DAY_STORY);
+      return;
     }
-  }, [metadata, initDemoStory]);
+    const syncFromCloud = async () => {
+      try {
+        const res = await panelApi.getPanels(metadata.id);
+        if (res.data && res.data.length > 0) {
+          const cloudPanels: StoryPanel[] = res.data.map((p: any, idx: number) => ({
+            id: p.id,
+            pageNumber: p.page_number || Math.ceil((idx + 1) / 2),
+            panelNumber: p.panel_number || idx + 1,
+            title: p.title || `Panel ${idx + 1}`,
+            description: p.description || '',
+            cameraAngle: p.camera_angle || 'Cinematic Wide',
+            filterEffect: p.filter_effect || 'none',
+            soundEffectCue: p.sound_cue || 'wave',
+            selectedOption: {
+              id: p.id,
+              imageUrl: p.image_url || 'https://images.pollinations.ai/prompt/cinematic%20comic%20panel?width=800&height=450&nologo=true',
+              prompt: p.title || p.description,
+              cameraAngle: p.camera_angle || 'Cinematic Wide',
+              description: p.description || '',
+              seed: p.image_seed || 42
+            },
+            availableOptions: [],
+            textElements: p.text_elements || []
+          }));
+          setPanels(cloudPanels);
+        }
+      } catch (_err) {
+        console.warn("Cloud sync status:", _err);
+      }
+    };
+    syncFromCloud();
+  }, [metadata?.id, initDemoStory]);
 
   const handleSwitchPreset = (presetId: string) => {
     audioService.playSoundFx('page_turn');
@@ -116,10 +148,16 @@ export function App() {
     }
   };
 
-  const handleSelectOptionForNewPanel = (option: PanelOption, caption?: string, speech?: string) => {
+  const handleSelectOptionForNewPanel = async (option: PanelOption, caption?: string, speech?: string) => {
     const newPanelNumber = panels.length + 1;
+    const newPanelId = crypto.randomUUID();
+    const textElements = [
+      ...(caption ? [{ id: `cap-${Date.now()}`, type: 'caption' as const, content: caption, position: { x: 5, y: 80 } }] : []),
+      ...(speech ? [{ id: `spc-${Date.now()}`, type: 'speech' as const, content: speech, speaker: 'Character', position: { x: 15, y: 15 } }] : [])
+    ];
+
     const newPanel: StoryPanel = {
-      id: `panel-${Date.now()}`,
+      id: newPanelId,
       pageNumber: Math.ceil(newPanelNumber / 2),
       panelNumber: newPanelNumber,
       title: option.prompt || `Panel ${newPanelNumber}`,
@@ -129,13 +167,29 @@ export function App() {
       availableOptions: [option],
       filterEffect: metadata?.visualStyle === 'WW2 Sepia Ink' ? 'sepia' : 'none',
       soundEffectCue: option.cameraAngle === 'Dramatic Close-Up' ? 'boom' : 'wave',
-      textElements: [
-        ...(caption ? [{ id: `cap-${Date.now()}`, type: 'caption' as const, content: caption, position: { x: 5, y: 80 } }] : []),
-        ...(speech ? [{ id: `spc-${Date.now()}`, type: 'speech' as const, content: speech, speaker: 'Character', position: { x: 15, y: 15 } }] : [])
-      ]
+      textElements
     };
 
     addPanel(newPanel);
+
+    if (metadata) {
+      try {
+        await panelApi.createPanel(metadata.id, {
+          id: newPanelId,
+          page_number: newPanel.pageNumber,
+          panel_number: newPanel.panelNumber,
+          title: newPanel.title,
+          description: newPanel.description,
+          camera_angle: newPanel.cameraAngle,
+          filter_effect: newPanel.filterEffect,
+          sound_cue: newPanel.soundEffectCue,
+          image_url: option.imageUrl,
+          text_elements: textElements
+        });
+      } catch (_err) {
+        console.warn("Failed to sync panel to cloud DB:", _err);
+      }
+    }
 
     addMessage({
       id: `msg-approved-${Date.now()}`,
@@ -213,7 +267,23 @@ export function App() {
         <PanelEditorModal
           panel={editingPanel}
           visualStyle={metadata.visualStyle}
-          onSave={(updated) => { updatePanel(updated.id, updated); setEditingPanel(null); }}
+          onSave={async (updated) => { 
+            updatePanel(updated.id, updated); 
+            setEditingPanel(null);
+            if (metadata) {
+              try {
+                await panelApi.updatePanel(metadata.id, updated.id, {
+                  title: updated.title,
+                  description: updated.description,
+                  camera_angle: updated.cameraAngle,
+                  filter_effect: updated.filterEffect,
+                  sound_cue: updated.soundEffectCue,
+                  image_url: updated.selectedOption.imageUrl,
+                  text_elements: updated.textElements
+                });
+              } catch (_e) {}
+            }
+          }}
           onClose={() => setEditingPanel(null)}
         />
       )}
