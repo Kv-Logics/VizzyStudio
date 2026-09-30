@@ -6,6 +6,7 @@ import { PanelEditorModal } from './components/Storyboard/PanelEditorModal';
 import { CookieConsent } from './components/CookieConsent';
 import { LoopSlideshowModal } from './components/Slideshow/LoopSlideshowModal';
 import { StorySetupWizardModal } from './components/Wizard/StorySetupWizardModal';
+import { ProjectBibleModal } from './components/Bible/ProjectBibleModal';
 import { D_DAY_STORY, CYBERPUNK_STORY } from './data/presetStories';
 import { StoryPanel, ChatMessage, PanelOption, VisualStyle, StoryMetadata } from './types';
 import { generatePanelOptions } from './services/imageGeneratorService';
@@ -19,6 +20,7 @@ export function App() {
   const [editingPanel, setEditingPanel] = useState<StoryPanel | null>(null);
   const [isSlideshowOpen, setIsSlideshowOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [isBibleOpen, setIsBibleOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
@@ -231,6 +233,7 @@ export function App() {
         onSwitchPreset={handleSwitchPreset}
         onUpdateStyle={handleUpdateStyle}
         onOpenSetupWizard={() => setIsWizardOpen(true)}
+        onOpenProjectBible={() => setIsBibleOpen(true)}
         isMuted={isMuted}
         onToggleMute={() => setIsMuted(audioService.toggleMute())}
       />
@@ -294,6 +297,11 @@ export function App() {
           onClose={() => setIsSlideshowOpen(false)}
           isMuted={isMuted}
           onToggleMute={() => setIsMuted(audioService.toggleMute())}
+        />
+      )}
+      {isBibleOpen && (
+        <ProjectBibleModal
+          onClose={() => setIsBibleOpen(false)}
         />
       )}
       <CookieConsent />

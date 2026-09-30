@@ -32,6 +32,60 @@ export interface PanelOption {
   description: string;
 }
 
+export type WorkflowState = 
+  | 'DISCOVER'
+  | 'BRIEF'
+  | 'OUTLINE'
+  | 'PAGE'
+  | 'GENERATE'
+  | 'SELECT'
+  | 'REFINE'
+  | 'APPROVED';
+
+export type PanelLifecycleStatus = 
+  | 'DRAFT'
+  | 'DESCRIBING'
+  | 'GENERATING'
+  | 'OPTIONS_READY'
+  | 'SELECTED'
+  | 'REFINING'
+  | 'APPROVED';
+
+export interface CreativeBible {
+  title: string;
+  format: string;
+  genre: string;
+  tone: string;
+  visualStyle: VisualStyle;
+  colorPalette: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+  };
+  lighting: string;
+  cameraLanguage: string;
+  artDirection: string;
+  negativeConstraints: string;
+  isLocked: boolean;
+}
+
+export interface PageOutlineItem {
+  pageNumber: number;
+  title: string;
+  purpose: string;
+  suggestedPanels: number;
+  status: 'pending' | 'in_progress' | 'completed';
+}
+
+export interface ActiveTarget {
+  pageNumber: number;
+  panelNumber: number;
+  panelId?: string;
+  version?: string;
+  status: PanelLifecycleStatus;
+}
+
 export interface StoryPanel {
   id: string;
   pageNumber: number;
@@ -46,6 +100,7 @@ export interface StoryPanel {
   borderStyle?: 'solid' | 'handdrawn' | 'borderless' | 'jagged';
   durationSeconds?: number;
   soundEffectCue?: string;
+  status?: PanelLifecycleStatus;
 }
 
 export interface StoryMetadata {
@@ -63,6 +118,8 @@ export interface StoryMetadata {
   characterNotes: string;
   aspectRatio: '16:9' | '4:3' | '1:1' | '2:3';
   author: string;
+  creativeBible?: CreativeBible;
+  storyOutline?: PageOutlineItem[];
 }
 
 export interface ChatMessage {
@@ -74,4 +131,6 @@ export interface ChatMessage {
   optionsToPick?: PanelOption[];
   relatedPanelId?: string;
   quickReplies?: string[];
+  intentAction?: string;
 }
+

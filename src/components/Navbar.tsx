@@ -20,6 +20,7 @@ interface NavbarProps {
   onSwitchPreset: (presetId: string) => void;
   onUpdateStyle: (style: VisualStyle) => void;
   onOpenSetupWizard: () => void;
+  onOpenProjectBible?: () => void;
   isMuted: boolean;
   onToggleMute: () => void;
 }
@@ -33,6 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSwitchPreset,
   onUpdateStyle,
   onOpenSetupWizard,
+  onOpenProjectBible,
   isMuted,
   onToggleMute
 }) => {
@@ -62,10 +64,19 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* CENTER: Settings / Nav Links */}
           <div className="hidden lg:flex items-center space-x-6 text-sm font-medium text-slate-500">
+            {onOpenProjectBible && (
+              <button
+                onClick={() => { audioService.playSoundFx('click'); onOpenProjectBible(); }}
+                className="px-3 py-1 bg-slate-900 text-white rounded-full text-xs font-bold hover:bg-[#e0fb73] hover:text-slate-900 transition flex items-center space-x-1"
+              >
+                <span>📘 Project Bible</span>
+              </button>
+            )}
+
             <select 
               value={metadata.visualStyle}
               onChange={(e) => onUpdateStyle(e.target.value as VisualStyle)}
-              className="bg-transparent hover:text-slate-900 focus:outline-none cursor-pointer transition-colors"
+              className="bg-transparent hover:text-slate-900 focus:outline-none cursor-pointer transition-colors text-xs"
             >
               <option value="WW2 Sepia Ink">Style: WW2 Sepia</option>
               <option value="Gritty Noir">Style: Gritty Noir</option>
@@ -78,7 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <select 
               onChange={(e) => onSwitchPreset(e.target.value)}
               value={metadata.id}
-              className="bg-transparent hover:text-slate-900 focus:outline-none cursor-pointer transition-colors"
+              className="bg-transparent hover:text-slate-900 focus:outline-none cursor-pointer transition-colors text-xs"
             >
               <option value="123e4567-e89b-12d3-a456-426614174000">Preset: D-Day</option>
               <option value="123e4567-e89b-12d3-a456-426614174001">Preset: Neo-Tokyo</option>
@@ -87,14 +98,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             
             <button 
               onClick={() => { audioService.playSoundFx('click'); onOpenSetupWizard(); }} 
-              className="hover:text-slate-900 transition-colors"
+              className="hover:text-slate-900 transition-colors text-xs"
             >
               Setup
             </button>
             
             <button 
               onClick={() => { audioService.playSoundFx('click'); onExportPDF(); }} 
-              className="hover:text-slate-900 transition-colors"
+              className="hover:text-slate-900 transition-colors text-xs"
             >
               Export
             </button>

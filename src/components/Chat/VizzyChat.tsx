@@ -13,6 +13,8 @@ import { generatePanelOptions } from '../../services/imageGeneratorService';
 import { audioService } from '../../services/audioService';
 import { panelApi } from '../../services/apiClient';
 
+import { useStoryStore } from '../../stores/storyStore';
+
 interface VizzyChatProps {
   metadata: StoryMetadata;
   messages: ChatMessage[];
@@ -30,6 +32,7 @@ export const VizzyChat: React.FC<VizzyChatProps> = ({
   onUpdateStyle,
   panelCount
 }) => {
+  const { creativeBible, activeTarget, workflowState, lockCreativeBible } = useStoryStore();
   const [inputText, setInputText] = useState('');
   const [isGeneratingOptions, setIsGeneratingOptions] = useState(false);
   const [generatedOptions, setGeneratedOptions] = useState<PanelOption[] | null>(null);
@@ -66,7 +69,6 @@ export const VizzyChat: React.FC<VizzyChatProps> = ({
     const wantsGenerate = GENERATE_TRIGGERS.some(t => lower.includes(t));
     if (wantsGenerate) {
       onSendMessage(text);
-      // Auto-trigger panel generation after a short delay
       setTimeout(() => {
         handleGenerateOptions(text, activeCamera);
       }, 400);
@@ -142,27 +144,40 @@ export const VizzyChat: React.FC<VizzyChatProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-white/40 backdrop-blur-md border-r border-white/50 shadow-[4px_0_24px_-10px_rgba(0,0,0,0.1)] relative">
-      {/* Vizzy Assistant Header */}
-      <div className="p-4 bg-white/60 border-b border-white/50 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-[#e0fb73] border-2 border-white shadow-sm flex items-center justify-center">
-            <Bot className="w-5 h-5 text-slate-900" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h2 className="font-bold text-sm text-slate-900">Vizzy AI Assistant</h2>
+      {/* Vizzy Creative Director Header */}
+      <div className="p-4 bg-white/70 border-b border-white/50 flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full bg-[#e0fb73] border-2 border-white shadow-sm flex items-center justify-center">
+              <Bot className="w-5 h-5 text-slate-900" />
             </div>
-            <p className="text-[11px] text-slate-500 font-medium">Your creative co-director</p>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h2 className="font-bold text-sm text-slate-900">Vizzy — Creative Director</h2>
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium">Stateful AI Co-Director</p>
+            </div>
           </div>
+
+          <button
+            onClick={() => handleGenerateOptions(inputText || `Panel ${panelCount + 1} scene`, activeCamera)}
+            className="flex items-center space-x-1 text-xs px-3 py-1.5 rounded-full bg-slate-900 text-white shadow-sm border border-slate-800 hover:bg-[#e0fb73] hover:text-slate-900 transition-all font-bold"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>Gen Panel</span>
+          </button>
         </div>
 
-        <button
-          onClick={() => handleGenerateOptions(`Panel ${panelCount + 1} action scene`, activeCamera)}
-          className="flex items-center space-x-1 text-xs px-3 py-1.5 rounded-full bg-white text-slate-800 shadow-sm border border-slate-200 hover:border-[#e0fb73] hover:bg-[#f6ffdc] transition-all font-medium"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          <span>Gen Panel</span>
-        </button>
+        {/* Active Target & Pipeline Context Bar */}
+        <div className="flex items-center justify-between text-[11px] bg-slate-100/80 px-3 py-1.5 rounded-xl border border-slate-200 text-slate-700">
+          <div className="flex items-center space-x-1.5 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Target: <strong>Page {activeTarget.pageNumber} → Panel {panelCount + 1}</strong></span>
+          </div>
+          <span className="text-[10px] px-2 py-0.5 rounded-md bg-white text-slate-800 border border-slate-200 font-semibold uppercase tracking-wider">
+            {creativeBible?.isLocked ? '🔒 Bible Locked' : workflowState}
+          </span>
+        </div>
       </div>
 
       {/* Chat Messages Stream */}
