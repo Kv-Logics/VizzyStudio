@@ -17,9 +17,7 @@ if GEMINI_KEY:
 
 # Candidate models to try in order
 GEMINI_MODELS = [
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-8b",
-    "gemini-2.0-flash",
+    "gemini-3.8-flash",
 ]
 
 def query_nvidia_llm(prompt: str) -> Any:
