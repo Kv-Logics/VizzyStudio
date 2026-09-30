@@ -7,7 +7,11 @@ import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
 
+import requests
+
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
+NVIDIA_KEY = os.getenv("NVIDIA_API_KEY")
+
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
 
@@ -18,9 +22,35 @@ GEMINI_MODELS = [
     "gemini-2.0-flash",
 ]
 
+def query_nvidia_llm(prompt: str) -> Any:
+    if not NVIDIA_KEY:
+        return None
+    url = "https://integrate.api.nvidia.com/v1/chat/completions"
+    headers = {"Authorization": f"Bearer {NVIDIA_KEY}", "Accept": "application/json"}
+    body = {
+        "model": "meta/llama-3.2-11b-vision-instruct",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.5,
+        "max_tokens": 500
+    }
+    try:
+        res = requests.post(url, headers=headers, json=body, timeout=10)
+        if res.status_code == 200:
+            raw = res.json()["choices"][0]["message"]["content"].strip()
+            if raw.startswith("```"):
+                raw = raw.split("\n", 1)[1]
+                if raw.endswith("```"):
+                    raw = raw.rsplit("```", 1)[0]
+                raw = raw.strip()
+            data = json.loads(raw)
+            return data.get("response", "Ready for direction."), data.get("quick_replies", [])
+    except Exception as e:
+        logger.warning(f"NVIDIA NIM model failed: {e}")
+    return None
+
 async def generate_vizzy_response(user_content: str) -> Tuple[str, List[Dict[str, Any]]]:
     """
-    Generate a Vizzy AI Creative Director response using Google Gemini.
+    Generate a Vizzy AI Creative Director response using Google Gemini or NVIDIA NIM LLM.
     Enforces task-oriented workflow and state machine navigation.
     """
     system_prompt = (
@@ -63,6 +93,11 @@ async def generate_vizzy_response(user_content: str) -> Tuple[str, List[Dict[str
             except Exception as e:
                 logger.warning(f"Gemini model {model_name} failed: {e}")
                 continue
+
+    # Try NVIDIA NIM LLM
+    nv_res = query_nvidia_llm(prompt)
+    if nv_res:
+        return nv_res
 
     # Fallback response if API unavailable or rate-limited
     lower = user_content.lower()
