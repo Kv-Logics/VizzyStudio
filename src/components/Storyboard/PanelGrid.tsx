@@ -170,8 +170,11 @@ export const PanelGrid: React.FC<PanelGridProps> = ({
                 {/* Panel Image Container */}
                 <div className="relative aspect-video bg-slate-100 overflow-hidden">
                   <img
-                    src={panel.selectedOption?.imageUrl}
-                    alt={panel.description}
+                    src={panel.selectedOption?.imageUrl || `https://picsum.photos/seed/${panel.id}/1024/576`}
+                    alt={panel.description || panel.title}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${panel.id}/1024/576`;
+                    }}
                     className={`w-full h-full object-cover transition duration-500 group-hover:scale-105 ${
                       panel.filterEffect === 'sepia' 
                         ? 'sepia brightness-90' 
