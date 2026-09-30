@@ -83,7 +83,7 @@ graph LR;
     D -->|Port 80| E[React Static Assets]
     D -->|/api/| F[FastAPI Container]
     F --> G[Redis + Celery Containers]
-    F --> H[(Postgres Container)]
+    F --> H[(PostgreSQL)]
 ```
 
 ---
