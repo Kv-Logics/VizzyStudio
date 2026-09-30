@@ -67,9 +67,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             {onOpenProjectBible && (
               <button
                 onClick={() => { audioService.playSoundFx('click'); onOpenProjectBible(); }}
-                className="px-3 py-1 bg-slate-900 text-white rounded-full text-xs font-bold hover:bg-[#e0fb73] hover:text-slate-900 transition flex items-center space-x-1"
+                className="px-3.5 py-1.5 bg-slate-900 text-white rounded-full text-xs font-bold hover:bg-[#e0fb73] hover:text-slate-900 transition flex items-center space-x-2 border border-slate-800 shadow-sm"
               >
                 <span>📘 Project Bible</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-extrabold border border-emerald-500/30">
+                  ⚡ 85% Quota
+                </span>
               </button>
             )}
 

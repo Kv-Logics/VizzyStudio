@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, ShieldCheck, Layers, Palette, Camera, Clapperboard, X, CheckCircle } from 'lucide-react';
+import { BookOpen, ShieldCheck, Layers, Palette, Camera, Clapperboard, X, CheckCircle, Cpu } from 'lucide-react';
 import { useStoryStore } from '../../stores/storyStore';
 
 interface ProjectBibleModalProps {
@@ -99,6 +99,46 @@ export const ProjectBibleModal: React.FC<ProjectBibleModalProps> = ({ onClose })
                   </span>
                 </div>
               ))}
+            </div>
+          </div>
+          {/* 3. AI Model Specs & Token Limits Section */}
+          <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200/80 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Cpu className="w-5 h-5 text-amber-500" />
+                <h3 className="font-bold text-sm text-slate-900">3. AI Engine & Quota Limits</h3>
+              </div>
+              <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                ⚡ 85% Quota Active
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div className="bg-white p-3.5 rounded-xl border border-slate-200/60 space-y-1">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Image AI Model</span>
+                <span className="font-bold text-slate-900 text-xs block">Pollinations AI (Flux.1 / SDXL HD)</span>
+                <span className="text-[11px] text-slate-500 block">Resolution: 1024 x 576 | Aspect: 16:9</span>
+              </div>
+              <div className="bg-white p-3.5 rounded-xl border border-slate-200/60 space-y-1">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Director LLM Engine</span>
+                <span className="font-bold text-slate-900 text-xs block">Google Gemini 1.5 Flash</span>
+                <span className="text-[11px] text-slate-500 block">Task-Oriented Stateful Director</span>
+              </div>
+            </div>
+
+            {/* Token Quota Progress Bar */}
+            <div className="bg-white p-4 rounded-xl border border-slate-200/60 space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+                <span>Daily Token Quota Usage</span>
+                <span className="text-emerald-600">85,000 / 100,000 Tokens (85% Remaining)</span>
+              </div>
+              <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
+                <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full w-[85%] transition-all duration-500"></div>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+                <span>Resets in: 12h 45m</span>
+                <span className="font-semibold text-slate-700">85 / 100 Image Generations Remaining</span>
+              </div>
             </div>
           </div>
         </div>
