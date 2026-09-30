@@ -23,13 +23,30 @@ The final deliverable is an uninterrupted, cinematic viewing experience of the g
 
 ---
 
+## 🚀 Tech Stack
+
+### Frontend
+- **Framework:** React 18 with TypeScript
+- **Styling:** Tailwind CSS (Utility-first, responsive, and GPU-accelerated)
+- **State Management:** Zustand (Lightweight global state for story and workflow progression)
+- **Icons & Graphics:** Lucide React
+
+### Backend
+- **Framework:** FastAPI (Python) - High performance async API.
+- **AI Integration:** Google Gemini (`gemini-3.8-flash`) for the conversational AI director.
+- **Task Queue:** Celery with Redis as the message broker for async image generation.
+- **Database:** PostgreSQL (Asyncpg) orchestrated via SQLAlchemy ORM.
+- **External APIs:** Pollinations AI (Image Generation fallback to Unsplash/Picsum).
+
+---
+
 ## 🏗️ System Architecture & Orchestration
 
 The application relies on an event-driven, decoupled architecture designed for high responsiveness and background processing.
 
 ```mermaid
 graph TD;
-    A[React 18 Frontend] -->|REST API (FastAPI)| B(Backend Engine)
+    A[React 18 Frontend] -->|REST API - FastAPI| B(Backend Engine)
     B -->|SQLAlchemy Asyncpg| C[(PostgreSQL Database)]
     B -->|Context + Prompt| G[Gemini 3.8-Flash LLM]
     B -->|Enqueues Task| D(Redis Message Broker)
@@ -44,9 +61,23 @@ graph TD;
 
 The data layer is fully normalized to maintain the relationship between a global story, its conversational context, and its generated visual assets.
 
-1. **`stories` (The Creative Bible):** Stores global state (Genre, Visual Style, Synopsis, Color Palette) to ensure artistic consistency across all `n` panels.
-2. **`chat_messages` (The AI Memory):** Persists the back-and-forth dialogue (`story_id`, `sender`, `content`, `quick_replies`) to give the LLM historical context.
-3. **`panels` & `panel_options` (The Deliverables):** Tracks the lifecycle of each frame. `panels` store the sequence order and camera instructions. `panel_options` hold the 3 generated image URLs and a boolean flag for the final user selection.
+4. **`stories` (The Creative Bible):** Stores global state (`id`, `title`, `genre`, `visual_style`, `synopsis`) to ensure artistic consistency across all `n` panels.
+5. **`chat_messages` (The AI Memory):** Persists the back-and-forth dialogue (`id`, `story_id`, `sender`, `content`, `quick_replies`) to give the LLM historical context.
+6. **`panels` & `panel_options` (The Deliverables):** Tracks the lifecycle of each frame. `panels` store the sequence order and camera instructions. `panel_options` hold the 3 generated image URLs and a boolean flag for the final user selection.
+
+---
+
+## 🔌 API Integration Surface
+
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/api/v1/stories/` | `POST` | Creates a new Story/Creative Bible. |
+| `/api/v1/chat/` | `POST` | Sends a user message, returns Vizzy's contextual AI response. |
+| `/api/v1/chat/{story_id}` | `GET` | Retrieves the chronological chat history for a story. |
+| `/api/v1/stories/{story_id}/panels/generate` | `POST` | Enqueues a Celery task to generate image options. Returns `task_id`. |
+| `/api/v1/stories/task/{task_id}` | `GET` | Checks status of a Celery background task. |
+| `/api/v1/stories/{story_id}/panels/{panel_id}/options` | `GET` | Retrieves generated image options from the database. |
+| `/api/v1/stories/{story_id}/panels/{panel_id}/select/{option_id}` | `POST` | Approves a specific image option to be added to the final storyboard. |
 
 ---
 
