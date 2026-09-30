@@ -130,8 +130,11 @@ export const LoopSlideshowModal: React.FC<LoopSlideshowModalProps> = ({
         <div className="relative w-full max-w-6xl aspect-video rounded-3xl overflow-hidden shadow-2xl border-4 border-amber-500/30 halftone-overlay vignette-overlay">
           <img
             key={activePanel.id}
-            src={activePanel.selectedOption?.imageUrl}
-            alt={activePanel.description}
+            src={activePanel.selectedOption?.imageUrl || `https://picsum.photos/seed/${activePanel.id}/1024/576`}
+            alt={activePanel.description || activePanel.title}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${activePanel.id}/1024/576`;
+            }}
             className={`w-full h-full object-cover transition-transform duration-1000 ${
               kenBurnsActive ? 'animate-kenburns' : ''
             } ${
