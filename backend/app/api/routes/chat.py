@@ -34,8 +34,18 @@ async def send_message(message_in: ChatMessageCreate, db: AsyncSession = Depends
     await db.commit()
     await db.refresh(user_msg)
     
+    # Fetch recent history
+    history_result = await db.execute(
+        select(ChatMessage)
+        .where(ChatMessage.story_id == message_in.story_id)
+        .order_by(ChatMessage.created_at.desc())
+        .limit(10)
+    )
+    recent_messages = history_result.scalars().all()[::-1]
+    history_text = "\n".join([f"{msg.sender.value.capitalize()}: {msg.content}" for msg in recent_messages])
+    
     # Generate and save Vizzy response asynchronously or synchronously (simplified here)
-    vizzy_content, quick_replies = await generate_vizzy_response(message_in.content)
+    vizzy_content, quick_replies = await generate_vizzy_response(message_in.content, history_text)
     
     vizzy_msg = ChatMessage(
         story_id=message_in.story_id,

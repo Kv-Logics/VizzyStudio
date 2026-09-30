@@ -46,7 +46,7 @@ def query_nvidia_llm(prompt: str) -> Any:
         logger.warning(f"NVIDIA NIM model failed: {e}")
     return None
 
-async def generate_vizzy_response(user_content: str) -> Tuple[str, List[Dict[str, Any]]]:
+async def generate_vizzy_response(user_content: str, history_text: str = "") -> Tuple[str, List[Dict[str, Any]]]:
     """
     Generate a Vizzy AI Creative Director response using Google Gemini or NVIDIA NIM LLM.
     Enforces task-oriented workflow and state machine navigation.
@@ -73,7 +73,7 @@ async def generate_vizzy_response(user_content: str) -> Tuple[str, List[Dict[str
         "}\n"
     )
 
-    prompt = f"{system_prompt}\n\nUser: {user_content}"
+    prompt = f"{system_prompt}\n\nChat History (Last 10 Messages):\n{history_text}\n\nCurrent User Prompt: {user_content}"
 
     if GEMINI_KEY:
         for model_name in GEMINI_MODELS:
