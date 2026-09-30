@@ -13,6 +13,7 @@ passlib[bcrypt]
 structlog
 python-dotenv
 aioboto3
+boto3
 requests
 google-generativeai
 slowapi

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { StoryMetadata, StoryPanel, ChatMessage, VisualStyle } from '../types';
+import { persist } from 'zustand/middleware';
+import { StoryMetadata, StoryPanel, ChatMessage } from '../types';
 
 interface StoryState {
   metadata: StoryMetadata | null;
@@ -20,28 +21,36 @@ interface StoryState {
   initDemoStory: (preset: any) => void;
 }
 
-export const useStoryStore = create<StoryState>((set) => ({
-  metadata: null,
-  panels: [],
-  messages: [],
-  currentPanelId: null,
-  isLoading: false,
-  
-  setMetadata: (meta) => set({ metadata: meta }),
-  setPanels: (panels) => set({ panels }),
-  setMessages: (messages) => set({ messages }),
-  addPanel: (panel) => set((state) => ({ panels: [...state.panels, panel] })),
-  updatePanel: (panelId, updates) => set((state) => ({
-    panels: state.panels.map(p => p.id === panelId ? { ...p, ...updates } : p)
-  })),
-  addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
-  setCurrentPanel: (panelId) => set({ currentPanelId: panelId }),
-  setLoading: (loading) => set({ isLoading: loading }),
-  
-  initDemoStory: (preset) => set({
-    metadata: preset.metadata,
-    panels: preset.panels,
-    messages: preset.initialMessages || [],
-    currentPanelId: preset.panels[0]?.id || null,
-  }),
-}));
+export const useStoryStore = create<StoryState>()(
+  persist(
+    (set) => ({
+      metadata: null,
+      panels: [],
+      messages: [],
+      currentPanelId: null,
+      isLoading: false,
+
+      setMetadata: (meta) => set({ metadata: meta }),
+      setPanels: (panels) => set({ panels }),
+      setMessages: (messages) => set({ messages }),
+      addPanel: (panel) => set((state) => ({ panels: [...state.panels, panel] })),
+      updatePanel: (panelId, updates) => set((state) => ({
+        panels: state.panels.map(p => p.id === panelId ? { ...p, ...updates } : p)
+      })),
+      addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
+      setCurrentPanel: (panelId) => set({ currentPanelId: panelId }),
+      setLoading: (loading) => set({ isLoading: loading }),
+
+      initDemoStory: (preset) => set({
+        metadata: preset.metadata,
+        panels: preset.panels,
+        messages: preset.initialMessages || [],
+        currentPanelId: preset.panels[0]?.id || null,
+      }),
+    }),
+    {
+      name: 'vizzystudio-story-storage',
+    }
+  )
+);
+

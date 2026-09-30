@@ -53,11 +53,27 @@ export const VizzyChat: React.FC<VizzyChatProps> = ({
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, generatedOptions]);
 
+  const GENERATE_TRIGGERS = ['generate', 'gen panel', 'create panel', 'make panel', 'thats all generate', "that's all generate", 'generate panel', 'build panel', 'render'];
+
   const handleSend = () => {
     if (!inputText.trim()) return;
     audioService.playSoundFx('click');
-    onSendMessage(inputText.trim());
+    const text = inputText.trim();
     setInputText('');
+
+    // Detect if user wants to generate a panel
+    const lower = text.toLowerCase();
+    const wantsGenerate = GENERATE_TRIGGERS.some(t => lower.includes(t));
+    if (wantsGenerate) {
+      onSendMessage(text);
+      // Auto-trigger panel generation after a short delay
+      setTimeout(() => {
+        handleGenerateOptions(`Panel ${panelCount + 1} scene`, activeCamera);
+      }, 400);
+      return;
+    }
+
+    onSendMessage(text);
   };
 
   const handleGenerateOptions = async (promptText: string, camera: CameraAngle) => {
@@ -186,8 +202,10 @@ export const VizzyChat: React.FC<VizzyChatProps> = ({
                         key={rIdx}
                         onClick={() => {
                           audioService.playSoundFx('click');
-                          if (reply.startsWith('Add Panel')) {
-                            handleGenerateOptions(reply, 'Cinematic Wide');
+                          const lower = reply.toLowerCase();
+                          const wantsGenerate = GENERATE_TRIGGERS.some(t => lower.includes(t)) || lower.includes('add panel');
+                          if (wantsGenerate) {
+                            handleGenerateOptions(`Panel ${panelCount + 1} ${reply}`, activeCamera);
                           } else {
                             onSendMessage(reply);
                           }

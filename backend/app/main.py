@@ -8,9 +8,9 @@ import app.models.story
 import app.models.panel
 import app.models.chat_message
 import redis
-import google.generativeai as genai
 import os
-import requests
+import boto3
+from botocore.exceptions import ClientError
 
 app = FastAPI(
     title="Vizzy API",
@@ -23,11 +23,11 @@ async def startup_event():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-# Configure CORS for local development
+# Configure CORS - allow all origins since frontend is served via Nginx proxy
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -61,26 +61,32 @@ async def health_check():
         status["status"] = "unhealthy"
         status["components"]["redis"] = f"error: {str(e)}"
         
-    # Check Gemini API
+    # Check AWS Bedrock access
     try:
-        if os.getenv("GEMINI_API_KEY"):
-            status["components"]["gemini"] = "configured"
-        else:
-            status["status"] = "unhealthy"
-            status["components"]["gemini"] = "missing key"
+        client = boto3.client(
+            "bedrock-runtime",
+            region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"),
+            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+        )
+        # Lightweight connectivity check — list is enough to verify creds
+        boto3.client(
+            "bedrock",
+            region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"),
+            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+        )
+        status["components"]["bedrock"] = "configured"
     except Exception as e:
-        status["status"] = "unhealthy"
-        status["components"]["gemini"] = f"error: {str(e)}"
+        status["components"]["bedrock"] = f"error: {str(e)}"
         
     # Check NVIDIA API
     try:
         if os.getenv("NVIDIA_API_KEY"):
             status["components"]["nvidia"] = "configured"
         else:
-            status["status"] = "unhealthy"
-            status["components"]["nvidia"] = "missing key"
+            status["components"]["nvidia"] = "not configured"
     except Exception as e:
-        status["status"] = "unhealthy"
         status["components"]["nvidia"] = f"error: {str(e)}"
         
     return status

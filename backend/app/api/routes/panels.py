@@ -65,3 +65,11 @@ async def select_panel_option(story_id: UUID, panel_id: UUID, option_id: UUID, d
     
     await db.commit()
     return {"message": "Option selected", "panel_id": panel_id}
+
+@router.get("/{story_id}/panels", response_model=List[PanelResponse])
+async def get_story_panels(story_id: UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Panel).where(Panel.story_id == story_id).order_by(Panel.created_at.asc())
+    )
+    return result.scalars().all()
+

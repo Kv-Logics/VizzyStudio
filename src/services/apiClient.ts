@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+// Use relative URL so requests go through Nginx reverse proxy (no CORS issues)
+// Falls back to localhost:8000 for local development
+const BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8000/api/v1'
+  : '/api/v1';
+
 const api = axios.create({
-  baseURL: 'http://32.195.201.1:8000/api/v1',
+  baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -30,7 +36,10 @@ export const panelApi = {
     api.post(`/stories/${storyId}/panels/${panelId}/select/${optionId}`),
   checkTaskStatus: (taskId: string) =>
     api.get(`/stories/task/${taskId}`),
+  getPanels: (storyId: string) =>
+    api.get(`/stories/${storyId}/panels`),
 };
+
 
 export const chatApi = {
   sendMessage: (storyId: string, content: string) =>
