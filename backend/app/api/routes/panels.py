@@ -66,10 +66,12 @@ async def select_panel_option(story_id: UUID, panel_id: UUID, option_id: UUID, d
     await db.commit()
     return {"message": "Option selected", "panel_id": panel_id}
 
+from sqlalchemy.orm import selectinload
+
 @router.get("/{story_id}/panels", response_model=List[PanelResponse])
 async def get_story_panels(story_id: UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
-        select(Panel).where(Panel.story_id == story_id).order_by(Panel.created_at.asc())
+        select(Panel).options(selectinload(Panel.options)).where(Panel.story_id == story_id).order_by(Panel.created_at.asc())
     )
     return result.scalars().all()
 
@@ -89,14 +91,15 @@ async def create_or_upsert_panel(story_id: UUID, panel_in: PanelCreate, db: Asyn
         await db.commit()
 
     if panel_in.id:
-        existing = await db.get(Panel, panel_in.id)
+        result = await db.execute(select(Panel).options(selectinload(Panel.options)).where(Panel.id == panel_in.id))
+        existing = result.scalar_one_or_none()
         if existing:
             for field, val in panel_in.model_dump(exclude_unset=True).items():
                 if field != "id":
                     setattr(existing, field, val)
             await db.commit()
-            await db.refresh(existing)
-            return existing
+            result = await db.execute(select(Panel).options(selectinload(Panel.options)).where(Panel.id == panel_in.id))
+            return result.scalar_one()
 
     panel_data = panel_in.model_dump()
     if not panel_data.get("id"):
@@ -109,20 +112,22 @@ async def create_or_upsert_panel(story_id: UUID, panel_in: PanelCreate, db: Asyn
     )
     db.add(new_panel)
     await db.commit()
-    await db.refresh(new_panel)
-    return new_panel
+    result = await db.execute(select(Panel).options(selectinload(Panel.options)).where(Panel.id == new_panel.id))
+    return result.scalar_one()
 
 @router.put("/{story_id}/panels/{panel_id}", response_model=PanelResponse)
 async def update_panel(story_id: UUID, panel_id: UUID, panel_in: PanelBase, db: AsyncSession = Depends(get_db)):
-    panel = await db.get(Panel, panel_id)
-    if not panel or panel.story_id != story_id:
+    result = await db.execute(select(Panel).options(selectinload(Panel.options)).where(Panel.id == panel_id, Panel.story_id == story_id))
+    panel = result.scalar_one_or_none()
+    if not panel:
         raise HTTPException(status_code=404, detail="Panel not found")
         
     for field, val in panel_in.model_dump(exclude_unset=True).items():
         setattr(panel, field, val)
         
     await db.commit()
-    await db.refresh(panel)
-    return panel
+    result = await db.execute(select(Panel).options(selectinload(Panel.options)).where(Panel.id == panel_id))
+    return result.scalar_one()
+
 
 
