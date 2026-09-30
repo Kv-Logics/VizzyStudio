@@ -24,6 +24,7 @@ interface VizzyChatProps {
   panelCount: number;
   isTyping?: boolean;
   typingStatus?: string;
+  onClearChat: () => void;
 }
 
 export const VizzyChat: React.FC<VizzyChatProps> = ({
@@ -34,7 +35,8 @@ export const VizzyChat: React.FC<VizzyChatProps> = ({
   onUpdateStyle,
   panelCount,
   isTyping,
-  typingStatus
+  typingStatus,
+  onClearChat
 }) => {
   const { creativeBible, activeTarget, workflowState, lockCreativeBible } = useStoryStore();
   const [inputText, setInputText] = useState('');
@@ -163,13 +165,21 @@ export const VizzyChat: React.FC<VizzyChatProps> = ({
             </div>
           </div>
 
-          <button
-            onClick={() => handleGenerateOptions(inputText || `Panel ${panelCount + 1} scene`, activeCamera)}
-            className="flex items-center space-x-1 text-xs px-3 py-1.5 rounded-full bg-slate-900 text-white shadow-sm border border-slate-800 hover:bg-[#e0fb73] hover:text-slate-900 transition-all font-bold"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Gen Panel</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={onClearChat}
+              className="flex items-center space-x-1 text-[10px] px-2 py-1.5 rounded-full bg-slate-100 text-slate-500 shadow-sm border border-slate-200 hover:bg-rose-100 hover:text-rose-600 transition-all font-semibold"
+            >
+              <span>Clear Chat</span>
+            </button>
+            <button
+              onClick={() => handleGenerateOptions(inputText || `Panel ${panelCount + 1} scene`, activeCamera)}
+              className="flex items-center space-x-1 text-xs px-3 py-1.5 rounded-full bg-slate-900 text-white shadow-sm border border-slate-800 hover:bg-[#e0fb73] hover:text-slate-900 transition-all font-bold"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Gen Panel</span>
+            </button>
+          </div>
         </div>
 
         {/* Active Target & Pipeline Context Bar */}

@@ -256,6 +256,7 @@ export function App() {
             panelCount={panels.length}
             isTyping={isTyping}
             typingStatus={typingStatus}
+            onClearChat={() => handleSwitchPreset('new-blank')}
           />
         </div>
         <div className="hidden md:flex flex-1 h-full">
