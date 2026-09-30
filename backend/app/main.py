@@ -9,8 +9,6 @@ import app.models.panel
 import app.models.chat_message
 import redis
 import os
-import boto3
-from botocore.exceptions import ClientError
 
 app = FastAPI(
     title="Vizzy API",
@@ -61,24 +59,15 @@ async def health_check():
         status["status"] = "unhealthy"
         status["components"]["redis"] = f"error: {str(e)}"
         
-    # Check AWS Bedrock access
+    # Check Gemini API
     try:
-        client = boto3.client(
-            "bedrock-runtime",
-            region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"),
-            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-        )
-        # Lightweight connectivity check — list is enough to verify creds
-        boto3.client(
-            "bedrock",
-            region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"),
-            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-        )
-        status["components"]["bedrock"] = "configured"
+        gemini_key = os.getenv("GEMINI_API_KEY")
+        if gemini_key:
+            status["components"]["gemini"] = "configured"
+        else:
+            status["components"]["gemini"] = "not configured"
     except Exception as e:
-        status["components"]["bedrock"] = f"error: {str(e)}"
+        status["components"]["gemini"] = f"error: {str(e)}"
         
     # Check NVIDIA API
     try:

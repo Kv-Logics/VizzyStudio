@@ -12,7 +12,7 @@ import { generatePanelOptions } from './services/imageGeneratorService';
 import { exportStoryToPDF } from './services/pdfExportService';
 import { audioService } from './services/audioService';
 import { useStoryStore } from './stores/storyStore';
-import { chatApi } from './services/apiClient';
+import { chatApi, storyApi } from './services/apiClient';
 
 export function App() {
   const { metadata, panels, messages, setMetadata, setPanels, setMessages, addPanel, addMessage, updatePanel, initDemoStory } = useStoryStore();
