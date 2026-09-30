@@ -89,6 +89,24 @@ The data layer is fully normalized to maintain the relationship between a global
 
 ---
 
-## 🚀 Deployment & Local Testing
+## ☁️ Cloud Deployment & AI Model Architecture
+
+The application is deployed in a highly scalable containerized environment, leveraging distributed AI models.
+
+### AI Model Stack
+*   **Dialogue & Creative Direction:** Powered by **Google Gemini (`gemini-3.8-flash`)**. This model was chosen for its massive context window and lightning-fast inference, allowing it to parse the rolling 10-message chat history with near-zero latency.
+*   **Visual Generation:** Image synthesis is orchestrated dynamically by the Celery workers. The primary text-to-image engine utilizes the **Pollinations AI** API (with provisions for **NVIDIA** foundation models depending on load). The worker programmatically injects the user's artistic style constraint (e.g., *Gritty Noir*) directly into the diffusion model's latent prompt.
+
+### Infrastructure & Deployment Flow
+The entire stack is deployed on an **AWS EC2 Ubuntu Instance** and orchestrated via **Docker Compose**.
+
+1.  **Containerization:** The frontend (Nginx/React), Backend API (FastAPI), Message Broker (Redis), Background Worker (Celery), and Database (PostgreSQL) are fully containerized.
+2.  **Deployment Pipeline:** A custom `remote_deploy.sh` script executes via SSH. It syncs the local codebase to the AWS instance via `rsync`.
+3.  **Zero-Downtime Rebuild:** The script securely halts the running Docker containers, builds the updated web and worker images locally on the EC2 machine, and spins the Docker Compose network back up, ensuring all inter-container networking (e.g., FastAPI communicating with Redis via internal DNS) is cleanly established.
+4.  **Reverse Proxy:** Nginx routes incoming HTTP traffic on port 80 directly to the React frontend or proxies `/api/` traffic securely to the FastAPI backend.
+
+---
+
+## 🚀 Testing & User Guide
 
 *See [GUIDE.md](./GUIDE.md) for exact testing instructions, user flows, and shortcuts for interacting with the AI Director.*
